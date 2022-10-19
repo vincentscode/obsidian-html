@@ -6,11 +6,7 @@ This is a short Python script to convert an [Obsidian](https://obsidian.md/) vau
 
 Install `obsidian-html` by running:
 
-    sudo pip install git+https://github.com/kmaasrud/obsidian-html.git
-
-Or doing the same (without the `sudo`) as an administrator on Windows.
-
-> Admin privileges is needed to ensure that the script is in the PATH. You can easily clone this repo and install the package locally with `pip install .` or `python setup.py develop`, if you do not want to install as admin.
+    pip install git+https://github.com/vincentscode/obsidian-html.git
 
 ## Usage
 
@@ -27,8 +23,6 @@ The script will only convert the files located directly in the directory specifi
 The output is not very exiting from the get-go. It needs some style and structure. This is done by using a HTML template. A template must have the formatters `{title}` and `{content}` present. Their value should be obvious. The template file is supplied to `obsidian-html` by the `-t` flag, like this:
 
     obsidian-html <vault> -t template.html
-
-Here you can add metadata, link to CSS-files and add unified headers/footers to all the pages. [Here's](https://github.com/kmaasrud/brain/blob/master/template.html) an example of how I use the template function on my own hosted vault.
 
 ### TeX support via KaTeX
 
@@ -87,47 +81,65 @@ Using [highlight.js](https://highlightjs.org/), syntax highlighting is easily ac
 
 Make a GitHub Actions workflow using the YAML below, and your vault will be published to GitHub Pages every time you push to the repository.
 
-1. Make sure you have GitHub Pages set up in the vault, and that it has `gh-pages` `/root` as its source.
+1. Make sure you have GitHub Pages set up in the vault.
 2. Modify the following YAML job to match your repository.
 
     ```yaml
-    name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages
 
-    on:
-      push:
-        branches: [ master ]
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install obsidian-html
+      run: |
+        python -m pip install --upgrade pip
+        pip install git+https://github.com/vincentscode/obsidian-html.git
       
-    jobs:
-      deploy:
-        runs-on: ubuntu-latest
+    - name: Generate HTML through obsidian-html
+      run: obsidian-html /home/runner/work/obsidian-vault/obsidian-vault -o ./_site
 
-        steps:
-        - uses: actions/checkout@v2
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v1
+ 
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1 
 
-        - name: Set up Python 3.8
-          uses: actions/setup-python@v2
-          with:
-            python-version: 3.8
-
-      - name: Install obsidian-html
-        run: |
-          python -m pip install --upgrade pip
-          pip install git+https://github.com/kmaasrud/obsidian-html.git
-          
-      - name: Generate HTML through obsidian-html
-        run: obsidian-html ./vault -o ./out -t ./template.html -d daily
-
-      - name: Deploy
-        uses: s0/git-publish-subdir-action@develop
-        env:
-          REPO: self
-          BRANCH: gh-pages
-          FOLDER: out
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     ```
 
 ## To do
 
+- [ ] Support sub-dirs and recursing
 - [ ] Support local attachments
 - [ ] Support the `![[]]` embedding syntax (perhaps using iframe or some similar method)
 - [ ] Support extra features added by the user through YAML metadata
