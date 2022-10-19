@@ -27,7 +27,8 @@ class Vault:
     def convert_to_html(self):
         notes_html = []
         for note in self.notes:
-            filename_html = slug_case(note["filename"]) + ".html"
+            filename_html = note["filename"] + ".html"
+            # filename_html = slug_case(note["filename"]) + ".html"
             content_html = htmlify(note["content"])
 
             notes_html.append(
