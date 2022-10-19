@@ -4,10 +4,10 @@ from .format import htmlify
 
 
 class Vault:
-    def __init__(self, vault_root, extra_folders=[], html_template=None):
+    def __init__(self, vault_root, recursive=False, html_template=None):
         self.vault_root = vault_root
-        self.notes = find_files(vault_root, extra_folders, no_extension=True)
-        self.extra_folders = extra_folders
+        self.notes = find_files(vault_root, recursive, no_extension=True)
+        self.recursive = recursive
         self._add_backlinks()
 
         self.html_template = html_template
@@ -43,9 +43,6 @@ class Vault:
         # Ensure out_dir exists, as well as its sub-folders.
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
-        for folder in self.extra_folders:
-            if not os.path.exists(out_dir + "/" + folder):
-                os.makedirs(out_dir + "/" + folder)
 
         notes_html = self.convert_to_html()
 
