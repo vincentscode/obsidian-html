@@ -12,11 +12,13 @@ def md_link(text, link):
     return "[" + text + "](" + link + ")"
 
 
-def find_files(vault_root, extra_folders, no_extension=False):
+def find_files(vault_root, recursive, no_extension=False):
     # Find all markdown-files in vault root.
     md_files = find_md_files(vault_root, no_extension)
 
     # Find all markdown-files in each extra folder.
+    # TODO: recurse
+    extra_folders = []
     for folder in extra_folders:
         md_files += find_md_files(os.path.join(vault_root, folder),
                                   no_extension, is_extra_folder=True)
