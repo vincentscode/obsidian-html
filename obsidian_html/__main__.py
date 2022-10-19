@@ -20,12 +20,12 @@ parser.add_argument("-t", "--template",
                     default=None,
                     help="Path to HTML template")
 
-parser.add_argument("-d", "--dirs",
+parser.add_argument("-r", "--recursive",
                     nargs="+",
                     default=[],
-                    help="Extra sub-directories in vault that you want included")
+                    help="Include sub-directories in vault recursively")
 
 args = parser.parse_args()
 
-vault = Vault(args.Vault, extra_folders=args.dirs, html_template=args.template)
+vault = Vault(args.Vault, recursive=args.recursive, html_template=args.template)
 vault.export_html(args.output_dir)
